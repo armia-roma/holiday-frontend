@@ -1,5 +1,6 @@
 "use client";
-import axios from "./../api-client";
+import api from "./../api-client";
+import axios from "axios";
 import "react-phone-number-input/style.css";
 import "./LeadForm.css";
 import PhoneInput, { Value } from "react-phone-number-input";
@@ -36,7 +37,6 @@ export default function LeadForm() {
 		message: "",
 		value: false,
 	});
-	const [value, setValue] = useState<Value>();
 	const handleInputChange = (field: string, value: string) => {
 		setFormData((prev) => ({
 			...prev,
@@ -56,7 +56,7 @@ export default function LeadForm() {
 			return;
 		}
 		try {
-			const response = await axios.post("/lead", formData);
+			const response = await api.post("/lead", formData);
 			setAlert((prev) => ({
 				...prev,
 				type: "success",
@@ -69,21 +69,22 @@ export default function LeadForm() {
 					value: false,
 				}));
 			}, 3000);
-		} catch (error: any) {
-			if (error.response) {
-				setAlert((prev) => ({
-					...prev,
-					type: "error",
-					message: error.response.data.message,
-					value: true,
-				}));
-				setTimeout(() => {
+		} catch (error) {
+			if (axios.isAxiosError(error))
+				if (error.response) {
 					setAlert((prev) => ({
 						...prev,
-						value: false,
+						type: "error",
+						message: error.response?.data.message,
+						value: true,
 					}));
-				}, 3000);
-			}
+					setTimeout(() => {
+						setAlert((prev) => ({
+							...prev,
+							value: false,
+						}));
+					}, 3000);
+				}
 		}
 	};
 	return (
@@ -113,7 +114,7 @@ export default function LeadForm() {
 				<div className="">
 					<PhoneInput
 						placeholder="Enter phone number"
-						value={value}
+						value={formData.phone_number}
 						onChange={(newValue: Value) =>
 							handleInputChange("phone_number", newValue)
 						}
